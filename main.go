@@ -14,6 +14,7 @@ import (
 
 func main() {
 	urlFlag := flag.String("url", "http://gophercises.com", "the url that you want to build a sitemap for")
+	maxDepth := flag.Int("depth", 3, "the maximum number of ")
 	flag.Parse()
 
 	pages := get(*urlFlag)
