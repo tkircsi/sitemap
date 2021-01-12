@@ -14,13 +14,41 @@ import (
 
 func main() {
 	urlFlag := flag.String("url", "http://gophercises.com", "the url that you want to build a sitemap for")
-	maxDepth := flag.Int("depth", 3, "the maximum number of ")
+	maxDepth := flag.Int("depth", 5, "the maximum number of deep level to traverse")
 	flag.Parse()
 
-	pages := get(*urlFlag)
+	pages := bfs(*urlFlag, *maxDepth)
 	for _, page := range pages {
 		fmt.Println(page)
 	}
+}
+
+func bfs(urlStr string, maxDepth int) []string {
+	seen := make(map[string]struct{})
+	var q map[string]struct{}
+	nq := map[string]struct{}{
+		urlStr: {},
+	}
+
+	for i := 0; i < maxDepth; i++ {
+		q, nq = nq, make(map[string]struct{})
+		for url := range q {
+			if _, ok := seen[url]; ok {
+				continue
+			}
+			seen[url] = struct{}{}
+			for _, link := range get(url) {
+				nq[link] = struct{}{}
+			}
+		}
+	}
+	ret := make([]string, len(seen))
+	i := 0
+	for k := range seen {
+		ret[i] = k
+		i++
+	}
+	return ret
 }
 
 func get(urlStr string) []string {
@@ -30,12 +58,12 @@ func get(urlStr string) []string {
 	}
 	defer resp.Body.Close()
 
-	reqUrl := resp.Request.URL
-	baseUrl := &url.URL{
-		Scheme: reqUrl.Scheme,
-		Host:   reqUrl.Host,
+	reqURL := resp.Request.URL
+	baseURL := &url.URL{
+		Scheme: reqURL.Scheme,
+		Host:   reqURL.Host,
 	}
-	base := baseUrl.String()
+	base := baseURL.String()
 
 	return filter(hrefs(resp.Body, base), withPrefix(base))
 }
